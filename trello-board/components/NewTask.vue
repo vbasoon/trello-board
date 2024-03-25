@@ -28,7 +28,7 @@
       v-model="title"
       @keydown.tab="createTask"
       @keyup.enter="createTask"
-      class="focus:bg-white focus:shadow resize-none rounded w-full border-round"
+      class="focus:bg-white focus:shadow resize-none rounded px-4 w-full border-round cursor-pointer"
       :class="{
         'h-7': !focused,
         'h-20': focused,
@@ -37,7 +37,7 @@
       @focus="focused = true"
       @blur="focused = false"
       :placeholder="!focused ? 'Add a Card' : 'Enter a title for the card'"
-    />
+    ></textarea>
     
   </div>
 

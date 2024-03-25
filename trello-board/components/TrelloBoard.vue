@@ -2,8 +2,9 @@
 import type {Column, Task} from '~~/types';
 import draggable from 'vuedraggable'
 import { nanoid} from "nanoid";  
+//import NewTask from './NewTask.vue';
 
-  const columns = ref<Column[]>([
+  const columns = useLocalStorage<Column[]>("trelloBoard", [
     {
       title: "Backlog",
       id: nanoid(),
@@ -29,25 +30,53 @@ import { nanoid} from "nanoid";
     { title: "In Progress", id: nanoid(), tasks: []},
     { title: "QA", id: nanoid(), tasks: []},
     { title: "Complete", id: nanoid(), tasks: []},
-  ]);
-  const alt = useKeyModifier("Alt")
+  ], {});
+  const alt = useKeyModifier("Alt");
+
+  watch(columns, () => {
+
+  }, {
+    deep: true
+  })
+
+  function createColumn(){
+    const column: Column = {
+      id: nanoid(),
+      title: "",
+      tasks:[],
+    }
+    columns.value.push(column);
+    nextTick(()=>{
+      (document.querySelector(".column:last-of-type .title-input") as HTMLInputElement).focus()
+    })
+    
+  }
 </script>
 
 <template>
-  <div>
+  <div class="flex items-start overflow-x-auto gap-4">
     <draggable 
       v-model="columns"
       group="columns"
       :animation="150"
       handle=".drag-handle"
       item-key="id"
-      class="flex gap-4 overflow-x-auto items-start"
+      class="flex gap-4 items-start"
     >
       <template #item="{element: column} : {element: Column}">
         <div class="column bg-gray-200 p-5 rounded min-w-[250px]">
           <header class="font-bold mb-4">
             <Draghandle/>
-            {{ column.title }}
+            <input 
+              class="title-input bg-transparent focus:bg-white rounded px-1 w-4/5"
+              @keyup.enter="($event.target as HTMLInputElement).blur()"
+              @keydown.backspace="
+                column.title === ''
+                  ? columns = columns.filter(c=> c.id != column.id)
+                  : null"
+              type="text"
+              v-model="column.title" 
+            />
           </header>
           <draggable
             v-model="column.tasks"
@@ -58,18 +87,24 @@ import { nanoid} from "nanoid";
           >
             <template #item="{element: task} : {element: Task}">
               <div>
-                <TrelloBoardTask :task="task"/>
+                <TrelloBoardTask :task="task" @delete="column.tasks = column.tasks.filter(t => t.id != $event)"/>
               </div>
               
             </template>
           </draggable>
 
           <footer>
-            <button class="text-gray-500">+ Add a Card</button>
+            <NewTask @add="column.tasks.push($event)"/>
           </footer>
         </div>
       </template>
     </draggable>
+    <button
+      @click="createColumn"
+      class="bg-gray-200 whitespace-nowrap p-2 rounded opacity-50"
+    >
+      + Add Column
+    </button>
   </div>
 </template>
 
