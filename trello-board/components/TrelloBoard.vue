@@ -30,7 +30,20 @@ import { nanoid} from "nanoid";
     { title: "In Progress", id: nanoid(), tasks: []},
     { title: "QA", id: nanoid(), tasks: []},
     { title: "Complete", id: nanoid(), tasks: []},
-  ], {});
+  ], {
+    serializer: {
+      read: (value) => {
+        return JSON.parse(value).map((column: Column) => {
+          column.tasks = column.tasks.map((task: Task) => {
+            task.createdAt = new Date(task.createdAt);
+            return task;
+          });
+          return column
+        }); 
+      },
+      write: (value) => JSON.stringify(value),
+    }
+  });
   const alt = useKeyModifier("Alt");
 
   watch(columns, () => {
